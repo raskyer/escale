@@ -41,11 +41,28 @@ export default class Character {
     this.state = State.Run;
   }
 
+  async asyncMoveTo(x: integer, y: integer) {
+    return new Promise(resolve => {
+      this.dstX = x;
+      this.dstY = y;
+      this.onArrive = resolve;
+      this.state = State.Run;
+    });
+  }
+
   order(scene: Scene) {
     return new Order(scene, this, this.sprite.x, this.sprite.y - this.sprite.height);
   }
 
+  leave() {
+    this.sprite.destroy();
+    this.state = null;
+  }
+
   tick() {
+    if (this.state === null) {
+      return;
+    }
     this.sprite.play(this.key + '.' + this.state, true);
     if (this.state === State.Idle) {
       return;

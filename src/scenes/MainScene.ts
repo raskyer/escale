@@ -51,11 +51,26 @@ export class MainScene extends Phaser.Scene {
     this.bar = new Bar(this, middle, floor);
     this.clients.push(new Character(this, Key.Client1, 0, floor));
 
-    this.clients.forEach(
-      c => c.moveTo(middle, floor, _ => {
-        this.orders.push(c.order(this));
-      })
-    );
+    this.clients.forEach(async (client: Character) => {
+      await client.asyncMoveTo(middle, floor);
+      const order = client.order(this);
+      this.time.delayedCall(1000, async () => {
+        order.cancel();
+        await client.asyncMoveTo(0, floor);
+        client.leave();
+      }, [], this);
+    });
+
+    const makeDelay = () => Phaser.Math.RND.integerInRange(3000, 6000);
+    const makeCall = () => {
+      this.time.delayedCall(makeDelay(), () => {
+        const client = new Character(this, Key.Client1, 0, floor);
+        this.clients.push(client);
+        client.moveTo(middle, floor, () => {});
+        makeCall();
+      }, [], this);
+    }
+    makeCall();
 
     /*
     this.input.on('gameobjectdown', (_: any, o: any) => {
@@ -67,6 +82,8 @@ export class MainScene extends Phaser.Scene {
   update() {
     this.barmaid.tick();
     this.clients.forEach(client => client.tick());
+
+
   }
 
   private initAnims() {
