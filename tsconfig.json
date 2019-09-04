@@ -5,6 +5,8 @@
     "module": "commonjs",
     "allowSyntheticDefaultImports": true,
     "target": "es5",
-    "allowJs": true
+    "allowJs": true,
+    "baseUrl": "./src",
+    "rootDir": "."
   }
 }

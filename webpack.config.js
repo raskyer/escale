@@ -16,6 +16,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['.ts', '.js'],
+    modules: [ path.join(__dirname, './src'), path.join(__dirname, './node_modules') ]
   },
   output: {
     filename: 'app.js',
