@@ -7,7 +7,7 @@ import { Consumer } from 'utils/Interfaces';
 export default class Character {
   private state: State = State.Idle;
   private direction: Direction = Direction.Right;
-  private speed: integer = 1;
+  private speed: integer = 3;
 
   private wait: boolean = false;
   private elapsed: number = 0;
