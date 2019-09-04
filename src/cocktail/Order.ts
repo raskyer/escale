@@ -1,19 +1,20 @@
 import { GameObjects } from 'phaser';
 import Orderable from './Orderable';
+import { Consumer } from 'utils/Interfaces';
 
 export default class Order<T extends Orderable> {
-  private sprite: GameObjects.Shape;
-  private text: GameObjects.Text;
-  private inProgress: boolean;
+  private inProgress: boolean = false;
+  private onProgressListeners: Consumer<Order<T>>[] = [];
 
-  constructor(sprite: GameObjects.Shape, text: GameObjects.Text) {
-    this.sprite = sprite;
-    this.text = text;
-    this.inProgress = false;
+  constructor(private readonly sprite: GameObjects.Shape, private readonly text: GameObjects.Text) {
+    this.sprite.addListener('pointerdown', () => {
+      this.inProgress = true;
+      this.onProgressListeners.forEach(l => l(this));
+    });
   }
 
-  setInProgress(inProgress: boolean) {
-    this.inProgress = inProgress;
+  addOnProgressListener(listener: Consumer<Order<T>>) {
+    this.onProgressListeners.push(listener);
   }
 
   isInProgress() {

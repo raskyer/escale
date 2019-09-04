@@ -7,6 +7,13 @@ const config: Phaser.Types.Core.GameConfig = {
   height: window.innerHeight / 2,
   title: 'Escale',
   version: '0.1',
+  render: {
+    pixelArt: true
+  },
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_HORIZONTALLY
+  },
   scene: [MainScene]
 }
 

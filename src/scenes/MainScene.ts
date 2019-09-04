@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser';
-import Floor from 'drawable/Floor';
 import Bar from 'drawable/Bar';
 import Character from 'character/Character';
 import Key from 'character/Key';
@@ -8,6 +7,9 @@ import Order from 'cocktail/Order';
 import Orderable from 'cocktail/Orderable';
 import CharacterFactory from 'character/CharacterFactory';
 import ClientQueue from 'ClientQueue';
+import OrderFactory from 'cocktail/OrderFactory';
+import Settings from 'utils/Settings';
+import DrawableFactory from 'drawable/DrawableFactory';
 
 export class MainScene extends Phaser.Scene {
   private static BARMAID_IDLE = Key.Barmaid + '.' + Animation.Idle
@@ -15,11 +17,10 @@ export class MainScene extends Phaser.Scene {
   private static CLIENT1_IDLE = Key.Client1 + '.' + Animation.Idle;
   private static CLIENT1_RUN = Key.Client1 + '.' + Animation.Run;
 
-  private floor: Floor;
+  private settings: Settings;
   private barmaid: Character;
   private bar: Bar;
   private clients: Character[] = [];
-  private queue: Character[] = [];
   private orders: Order<Orderable>[] = [];
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
@@ -37,29 +38,24 @@ export class MainScene extends Phaser.Scene {
 
   create() {
     this.initAnims();
-    this.scale.setGameSize(600, 200);
-    this.scale.setZoom(3);
+    //this.scale.setGameSize(600, 200);
+    //this.scale.setZoom(3);
     //this.sound.play('background');
+    this.settings = new Settings(this.sys.canvas);
+    
+    const dFactory = new DrawableFactory(this, this.settings);
+    const cFactory = new CharacterFactory(this, this.settings);
 
-    const width = this.sys.game.canvas.width;
-    const height = this.sys.game.canvas.height;
-    const entrance = 0;
-    const floorHeight = 20;
-    const middle = width / 2;
-    const floor = height - floorHeight;
+    dFactory.createBackground();
+    dFactory.createFloor();
+    
+    this.barmaid = cFactory.createBarmaid();
+    this.bar = dFactory.createBar();
 
-    const background = this.add.image(-100, 60, 'background').setOrigin(0, 0);
-    background.setDisplaySize(width + 100, height - 50);
-
-    const factory = new CharacterFactory(this, entrance, middle, floor);
-    this.floor = new Floor(this, 0, floor, floorHeight);
-    this.barmaid = factory.createBarmaid();
-    this.bar = new Bar(this, middle, floor);
-
-    const queue = new ClientQueue(this.bar);
-    const client1 = factory.createClient('1');
-    const client2 = factory.createClient('2');
-    const client3 = factory.createClient('3');
+    const queue = new ClientQueue(this.onReady.bind(this), this.onAwait.bind(this));
+    const client1 = cFactory.createClient('1');
+    const client2 = cFactory.createClient('2');
+    const client3 = cFactory.createClient('3');
 
     this.clients.push(client1, client2, client3);
     
@@ -72,12 +68,6 @@ export class MainScene extends Phaser.Scene {
   update(time: number, delta: number) {
     this.barmaid.tick(delta);
     this.clients.forEach(client => client.tick(delta));
-
-    /*if (this.queue.length > 0 && this.queue[0].getState() === State.Run) {
-      const leaver = this.queue.shift();
-      // this.queue[0].moveTo(bar)
-      // this.queue[y = 1...n].follow(y-1)
-    }*/
   }
 
   private initAnims() {
@@ -117,13 +107,31 @@ export class MainScene extends Phaser.Scene {
   private buildClient(factory: CharacterFactory) {
     const client = factory.createClient('');
     this.clients.push(client);
-    /*factory
-      .applyOrderRoutine(client)
-      .then(({ inProgress, client }) => {
-        if (!inProgress) {
-          this.clients = this.clients.filter(c => c !== client);
-        }
-      });
-    */
+  }
+
+  private async onReady(client: Character) {
+    await client.moveTo(this.bar.getX(), this.bar.getY());
+    const order = OrderFactory.createOrderFor(this, client);
+    const tolerance = Phaser.Math.RND.integerInRange(3000, 6000);
+
+    order.addOnProgressListener(_ => {
+      client.stopWait();
+    });
+
+    client.startWait()
+    .then(_ => {
+      client.leave();
+      client.moveTo(this.settings.entrance, this.settings.floor);
+      order.cancel();
+    });
+  }
+
+  private async onAwait(client: Character, prev: Character) {
+    await client.follow(prev);
+    /*client.startWait()
+    .then(_ => {
+      client.leave();
+      client.moveTo(0, client.getY());
+    });*/
   }
 }

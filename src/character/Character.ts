@@ -2,14 +2,9 @@ import { GameObjects } from 'phaser';
 import State from './State';
 import Direction from './Direction';
 import Animation from './Animation';
-
-type Consumer<T> = (elem: T) => void;
+import { Consumer } from 'utils/Interfaces';
 
 export default class Character {
-  private sprite: GameObjects.Sprite;
-  private key: string;
-  private id: string;
-  
   private state: State = State.Idle;
   private direction: Direction = Direction.Right;
   private speed: integer = 1;
@@ -27,22 +22,18 @@ export default class Character {
 
   private onLeaveListeners: Consumer<Character>[] = [];
 
-  constructor(sprite: GameObjects.Sprite, key: string, id: string) {
-    this.sprite = sprite;
-    this.key = key;
-    this.id = id;
-  }
+  constructor(private readonly sprite: GameObjects.Sprite, private readonly key: string, private readonly id: string) {}
 
   turn(direction: Direction) {
     if (this.direction === direction) {
       return;
     } else if (direction === Direction.Left) {
       this.direction = direction;
-      this.sprite.setScale(-1, 1);
+      this.sprite.setScale(-Math.abs(this.sprite.scaleX), this.sprite.scaleY);
       this.sprite.setOrigin(1, 1);
     } else if (direction === Direction.Right) {
       this.direction = direction;      
-      this.sprite.setScale(1, 1);
+      this.sprite.setScale(Math.abs(this.sprite.scaleX), this.sprite.scaleY);
       this.sprite.setOrigin(0, 1);
     }
   }
@@ -70,14 +61,18 @@ export default class Character {
     this.onArrive = undefined;
   }
 
-  startWait(onAnnoyed: Consumer<Character>) {
-    this.wait = true;
-    this.elapsed = 0;
-    this.onAnnoyed = onAnnoyed;
+  startWait(): Promise<Character> {
+    return new Promise(resolve => {
+      this.wait = true;
+      this.elapsed = 0;
+      this.onAnnoyed = resolve;
+    });
   }
 
   stopWait() {
     this.wait = false;
+    this.elapsed = 0;
+    this.onAnnoyed = undefined;
   }
 
   getX() {
@@ -89,11 +84,11 @@ export default class Character {
   }
 
   getWidth() {
-    return this.sprite.width;
+    return this.sprite.displayWidth;
   }
 
   getHeight() {
-    return this.sprite.height;
+    return this.sprite.displayHeight;
   }
 
   getState() {
@@ -120,8 +115,8 @@ export default class Character {
     if (this.wait) {
       this.elapsed += delta;
       if (this.elapsed > this.tolerance) {
-        this.stopWait();
         this.onAnnoyed(this);
+        this.stopWait();
       }
     }
 
