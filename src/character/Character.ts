@@ -11,7 +11,7 @@ export default class Character {
 
   private wait: boolean = false;
   private elapsed: number = 0;
-  private tolerance: integer = 2000;
+  private tolerance: number;
   private onAnnoyed: Consumer<Character>;
 
   private dstX: integer;
@@ -61,8 +61,9 @@ export default class Character {
     this.onArrive = undefined;
   }
 
-  startWait(): Promise<Character> {
+  startWait(tolerance: integer): Promise<Character> {
     return new Promise(resolve => {
+      this.tolerance = tolerance;
       this.wait = true;
       this.elapsed = 0;
       this.onAnnoyed = resolve;
@@ -73,6 +74,12 @@ export default class Character {
     this.wait = false;
     this.elapsed = 0;
     this.onAnnoyed = undefined;
+  }
+
+  satisfaction(level: integer) {
+    if (level > 90) {
+      this.sprite.setTint(0x00FF00);
+    }
   }
 
   getX() {
@@ -115,6 +122,7 @@ export default class Character {
     if (this.wait) {
       this.elapsed += delta;
       if (this.elapsed > this.tolerance) {
+        this.sprite.setTint(0xFF0000);
         this.onAnnoyed(this);
         this.stopWait();
       }

@@ -18,6 +18,10 @@ export default class ClientQueue {
     return this;
   }
 
+  isFull() {
+    return this.queue.length > 5;
+  }
+
   private onLeave(client: Character) {
     const id = this.queue.findIndex(c => c === client);
     if (id === -1) {

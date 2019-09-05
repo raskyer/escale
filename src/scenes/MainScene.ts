@@ -1,4 +1,6 @@
 import * as Phaser from 'phaser';
+import { addSeconds, format } from 'date-fns';
+
 import Bar from 'drawable/Bar';
 import Character from 'character/Character';
 import Key from 'character/Key';
@@ -10,6 +12,7 @@ import ClientQueue from 'ClientQueue';
 import OrderFactory from 'cocktail/OrderFactory';
 import Settings from 'utils/Settings';
 import DrawableFactory from 'drawable/DrawableFactory';
+import UI from 'drawable/UI';
 
 export class MainScene extends Phaser.Scene {
   private static BARMAID_IDLE = Key.Barmaid + '.' + Animation.Idle
@@ -18,10 +21,13 @@ export class MainScene extends Phaser.Scene {
   private static CLIENT1_RUN = Key.Client1 + '.' + Animation.Run;
 
   private settings: Settings;
+  private ui: UI;
   private barmaid: Character;
   private bar: Bar;
   private clients: Character[] = [];
   private orders: Order<Orderable>[] = [];
+
+  private currentDate = new Date('1995-12-17T00:00:00');
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
@@ -48,7 +54,8 @@ export class MainScene extends Phaser.Scene {
 
     dFactory.createBackground();
     dFactory.createFloor();
-    
+
+    this.ui = dFactory.createUI();
     this.barmaid = cFactory.createBarmaid();
     this.bar = dFactory.createBar();
 
@@ -63,6 +70,28 @@ export class MainScene extends Phaser.Scene {
       .addClient(client1)
       .addClient(client2)
       .addClient(client3);
+
+    this.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        this.currentDate = addSeconds(this.currentDate, 1);
+        this.ui.setTime(format(this.currentDate, 'mm:ss'));
+      }
+    });
+
+    this.time.addEvent({
+      delay: 3000,
+      loop: true,
+      callback: () => {
+        if (queue.isFull()) {
+          return;
+        }
+        const client = cFactory.createClient(this.clients.length.toString());
+        this.clients.push(client);
+        queue.addClient(client);
+      }
+    })
   }
 
   update(time: number, delta: number) {
@@ -116,13 +145,25 @@ export class MainScene extends Phaser.Scene {
 
     order.addOnProgressListener(_ => {
       client.stopWait();
+      client.satisfaction(100);
+      client.leave();
+      order.cancel();
+      client.moveTo(this.settings.entrance, this.settings.floor)
+      .then(_ => {
+        client.destroy();
+        this.clients = this.clients.filter(c => c !== client);
+      });
     });
 
-    client.startWait()
+    client.startWait(tolerance)
     .then(_ => {
       client.leave();
-      client.moveTo(this.settings.entrance, this.settings.floor);
       order.cancel();
+      client.moveTo(this.settings.entrance, this.settings.floor)
+      .then(_ => {
+        client.destroy();
+        this.clients = this.clients.filter(c => c !== client);
+      });
     });
   }
 
