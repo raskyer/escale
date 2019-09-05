@@ -14,7 +14,7 @@ import Settings from 'utils/Settings';
 import DrawableFactory from 'drawable/DrawableFactory';
 import UI from 'drawable/UI';
 
-export class MainScene extends Phaser.Scene {
+export default class MainScene extends Phaser.Scene {
   private static BARMAID_IDLE = Key.Barmaid + '.' + Animation.Idle
   private static BARMAID_RUN = Key.Barmaid + '.' + Animation.Run;
   private static CLIENT1_IDLE = Key.Client1 + '.' + Animation.Idle;
@@ -141,6 +141,7 @@ export class MainScene extends Phaser.Scene {
     const order = OrderFactory.createOrderFor(this, client);
 
     order.addOnProgressListener(async _ => {
+      //this.game.scene.start('cocktail');
       client.stopWait();
       this.ui.addCash(5);
       client.satisfaction(100);
