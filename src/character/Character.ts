@@ -110,8 +110,9 @@ export default class Character {
     this.onLeaveListeners.push(listener);
   }
 
-  leave() {
+  leave(x: integer, y: integer): Promise<Character> {
     this.onLeaveListeners.forEach(l => l(this));
+    return this.moveTo(x, y);
   }
 
   destroy() {

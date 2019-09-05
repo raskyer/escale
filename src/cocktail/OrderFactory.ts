@@ -1,4 +1,4 @@
-import { Scene } from "phaser";
+import { Scene, Types } from "phaser";
 import Character from "character/Character";
 import Order from "./Order";
 
@@ -6,19 +6,45 @@ export default class OrderFactory {
   static createOrderFor(scene: Scene, client: Character) {
     const x = client.getX();
     const y = client.getY() - client.getHeight();
-    const width = 120;
-    const height = 20;
-    const color = 0xFFFFFF;
 
-    const sprite = scene.add.rectangle(x, y, width, height, color, 1).setOrigin(0, 1);
-    sprite.setInteractive({ useHandCursor: true });
-
-    const text = scene.add.text(x + 25, y, 'Mojito', {
+    const style: Types.GameObjects.Text.TextStyle = {
       color: '#00FF00',
-      fontSize: 20
-    }).setOrigin(0, 1);
+      fontFamily: "Arial Black",
+      fontSize: '20px',
+      fontStyle: 'bold',
+      backgroundColor: '#FFFFFF',
+      padding: {
+        x: 50,
+        y: 10
+      },
+      stroke: '#000',
+      strokeThickness: 2,
+    }
 
-    const order = new Order(sprite, text);
+    const text = scene.add.text(x, y, 'Mojito', style)
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true });
+
+    scene.add.tween({
+      targets: text,
+      alpha: { from: 0, to: 1 },
+      ease: 'Linear',
+      duration: 500
+    });
+
+    const order = new Order(text);
+
+    order.addOnCancelListener(l => {
+      scene.add.tween({
+        targets: text,
+        alpha: { from: 1, to: 0},
+        ease: 'Linear',
+        duration: 200,
+        onComplete: () => {
+          order.destroy();
+        }
+      });
+    });
 
     return order;
   }

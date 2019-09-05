@@ -52,12 +52,12 @@ export default class DrawableFactory {
     };
 
     const time = this.scene.add
-      .text(this.settings.width - 66, 10, '00:00', style)
-      .setOrigin(0,0);
+      .text(this.settings.width - 5, 10, '00:00', style)
+      .setOrigin(1,0);
     
     const cash = this.scene.add
-      .text(this.settings.width - 30, 30, '0$', style)
-      .setOrigin(0,0);
+      .text(this.settings.width - 5, 30, '0$', style)
+      .setOrigin(1,0);
     
     return new UI(time, cash);
   }

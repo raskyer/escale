@@ -44,8 +44,6 @@ export class MainScene extends Phaser.Scene {
 
   create() {
     this.initAnims();
-    //this.scale.setGameSize(600, 200);
-    //this.scale.setZoom(3);
     //this.sound.play('background');
     this.settings = new Settings(this.sys.canvas);
     
@@ -141,30 +139,23 @@ export class MainScene extends Phaser.Scene {
   private async onReady(client: Character) {
     await client.moveTo(this.bar.getX(), this.bar.getY());
     const order = OrderFactory.createOrderFor(this, client);
-    const tolerance = Phaser.Math.RND.integerInRange(3000, 6000);
 
-    order.addOnProgressListener(_ => {
+    order.addOnProgressListener(async _ => {
       client.stopWait();
+      this.ui.addCash(5);
       client.satisfaction(100);
-      client.leave();
       order.cancel();
-      client.moveTo(this.settings.entrance, this.settings.floor)
-      .then(_ => {
-        client.destroy();
-        this.clients = this.clients.filter(c => c !== client);
-      });
+      await client.leave(this.settings.entrance, this.settings.floor);
+      client.destroy();
+      this.clients = this.clients.filter(c => c !== client);
     });
 
-    client.startWait(tolerance)
-    .then(_ => {
-      client.leave();
-      order.cancel();
-      client.moveTo(this.settings.entrance, this.settings.floor)
-      .then(_ => {
-        client.destroy();
-        this.clients = this.clients.filter(c => c !== client);
-      });
-    });
+    const tolerance = Phaser.Math.RND.integerInRange(3000, 6000);
+    await client.startWait(tolerance);
+    order.cancel();
+    await client.leave(this.settings.entrance, this.settings.floor);
+    client.destroy();
+    this.clients = this.clients.filter(c => c !== client);
   }
 
   private async onAwait(client: Character, prev: Character) {
