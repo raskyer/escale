@@ -5,14 +5,18 @@ import Bar from 'drawable/Bar';
 import Character from 'character/Character';
 import Key from 'character/Key';
 import Animation from 'character/Animation';
-import Order from 'cocktail/Order';
-import Orderable from 'cocktail/Orderable';
+import Order from 'order/Order';
+import Orderable from 'order/Orderable';
 import CharacterFactory from 'character/CharacterFactory';
 import ClientQueue from 'ClientQueue';
-import OrderFactory from 'cocktail/OrderFactory';
+import OrderFactory from 'order/OrderFactory';
 import Settings from 'utils/Settings';
 import DrawableFactory from 'drawable/DrawableFactory';
 import UI from 'drawable/UI';
+import Liquids from 'cocktail/Liquids';
+import Bottle from 'cocktail/Bottle';
+import Glass from 'cocktail/Glass';
+import Liquid from 'cocktail/Liquid';
 
 export default class MainScene extends Phaser.Scene {
   private static BARMAID_IDLE = Key.Barmaid + '.' + Animation.Idle
@@ -52,55 +56,55 @@ export default class MainScene extends Phaser.Scene {
     const cFactory = new CharacterFactory(this, this.settings);
     const queue = new ClientQueue(this.onReady.bind(this), this.onAwait.bind(this));
 
-
     dFactory.createBackground();
     dFactory.createFloor();
 
-    const plugin: any = this.plugins.get('rexDragRotate');
 
+    /* COCKTAIL */
     const container = this.add.container(this.settings.middle + this.settings.barWidth, 0);
-    const bottle = this.add.sprite(0, 0, 'bottle').setOrigin(0,0).setInteractive();
-    const zone = this.add.rectangle(0, 0, this.settings.middle, this.settings.height, 0xFF0000).setOrigin(0, 0);
+    container.setSize(this.settings.middle, this.settings.height);
     
-    this.input.setDraggable(bottle);
-
+    const zone = this.add.rectangle(0, 0, this.settings.middle, this.settings.height, 0xFF0000).setOrigin(0, 0);
     container.add(zone);
+
+    const bottle = new Bottle(this, 0, 0, 'bottle');
     container.add(bottle);
 
-    const dragRotate = plugin.add(this, {
-      x: bottle.x + container.x,
-      y: bottle.y + container.y,
-      maxRadius: 100,
-      minRadius: 0,
-      enable: true,
-    }) as any;
+    const glass = Glass.build(this);
+    container.add(glass);
 
-    dragRotate.on('drag', (t: any) => {
-      bottle.rotation += t.deltaRotation;
-    });
+    this.physics.world.setBounds(container.x, container.y, container.width, container.height);
+    const liquids = new Liquids(this, container);
 
-    //this.physics.moveTo(this.barmaid, 0, 0);
+    const collider = this.physics.add.overlap(liquids, glass, function (glass: Glass, liquid: Liquid) {
+      const lBody = <Phaser.Physics.Arcade.Body> liquid.body;
+      //lBody.stop();
+      glass.fill();
+      lBody.checkCollision.none = true;
+      liquid.setActive(false);
+      liquid.setVisible(false);
+    }, null, this);
 
-    bottle.on('drag', function (pointer: any, dragX: integer, dragY: integer) {
-      const prevX = this.x;
-      const prevY = this.y;
-
-      this.x = dragX;
-      this.y = dragY;
-
-      const zoneBounds = zone.getBounds();
-      const bottleBounds = this.getBounds();
-
-      if (!Phaser.Geom.Rectangle.ContainsRect(zoneBounds, bottleBounds)) {
-        this.x = prevX;
-        this.y = prevY;
+    const repeat = this.time.addEvent({
+      delay: 50,
+      paused: true,
+      loop: true,
+      callback: () => {
+        liquids.flow(bottle.x, bottle.y);
       }
     });
 
-    bottle.on('dragend', function () {
-      dragRotate.setOrigin(bottle.x + container.x, bottle.y + container.y);
+    this.input.on('wheel', (pointer: Phaser.Input.Pointer, dx: integer, dy: integer, dz: integer, event: any) => {
+      bottle.angle -= dz / 10;
+      if (bottle.angle > 80 || bottle.angle < -80) {
+        liquids.flow(bottle.x, bottle.y);
+        repeat.paused = false;
+      } else {
+        repeat.paused = true;
+      }
     });
     //container.setVisible(false);
+    /* COCKTAIL */
 
 
     this.ui = dFactory.createUI();

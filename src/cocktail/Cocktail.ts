@@ -1,4 +1,4 @@
-import Orderable from "./Orderable";
+import Orderable from "../order/Orderable";
 
 export default class Cocktail implements Orderable {
   getTasks(): any[] {

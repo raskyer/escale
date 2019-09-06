@@ -1,8 +1,6 @@
 import * as Phaser from 'phaser';
 import MainScene from './scenes/MainScene';
 
-import * as DragRotatePlugin from './plugin';
-
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: document.body.clientWidth,
@@ -16,12 +14,12 @@ const config: Phaser.Types.Core.GameConfig = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_HORIZONTALLY
   },
-  plugins: {
-    global: [{
-        key: 'rexDragRotate',
-        plugin: DragRotatePlugin,
-        start: true
-    }]
+  physics: {
+    default: 'arcade',
+    arcade: {
+      debug: true,
+      gravity: { y: window.innerHeight / 2 }
+    }
   },
   scene: [MainScene]
 }
