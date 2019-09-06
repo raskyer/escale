@@ -70,9 +70,8 @@ export default class MainScene extends Phaser.Scene {
     const bottle = new Bottle(this, 0, 0, 'bottle');
     container.add(bottle);
 
-    const glass = Glass.build(this);
-    container.add(glass);
-
+    const glass = Glass.build(this, container);
+    
     this.physics.world.setBounds(container.x, container.y, container.width, container.height);
     const liquids = new Liquids(this, container);
 

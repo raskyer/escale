@@ -1,4 +1,4 @@
-import { Physics, Scene, GameObjects } from "phaser";
+import { Physics, Scene, GameObjects, Game } from "phaser";
 
 const SIZE = 2;
 
@@ -14,7 +14,7 @@ export default class Glass extends Physics.Arcade.Sprite {
   private readonly g: GameObjects.Graphics;
   private level = 1;
 
-  constructor(scene: Scene, x: integer, y: integer, texture: string) {
+  constructor(scene: Scene, x: integer, y: integer, texture: string, private readonly filler: GameObjects.Sprite, private readonly masked: GameObjects.Graphics) {
     super(scene, x, y, texture);
 
     this.setOrigin(0,0);
@@ -35,12 +35,18 @@ export default class Glass extends Physics.Arcade.Sprite {
   }
 
   fill() {
-    this.updateG();
+    if (this.level > this.height) {
+      return;
+    }
+    if (this.level > 10) {
+    }
     this.level++;
+    this.updateG();
   }
 
   private updateG() {
-    this.g.clear();
+    this.masked.y = this.y - this.level;
+    /*this.g.clear();
 
     const topY = (this.y + BOTTOM_Y) - this.level - SIZE;
     const bottomY = this.y + BOTTOM_Y;
@@ -59,13 +65,16 @@ export default class Glass extends Physics.Arcade.Sprite {
     ];
 
     this.g.fillPoints(points);
-    this.parentContainer.add(this.g);
+    this.parentContainer.add(this.g);*/
   }
 
   private onDrag(pointer: Phaser.Input.Pointer, dragX: integer, dragY: integer) {
     this.x = dragX;
     this.y = dragY;
-    this.updateG();
+    this.filler.x = dragX;
+    this.filler.y = dragY;
+    this.masked.x = dragX;
+    this.masked.y = dragY - this.level;
   }
 
   /*
@@ -84,9 +93,13 @@ export default class Glass extends Physics.Arcade.Sprite {
   }
   */
 
-  static build(scene: Scene) {
+  static build(scene: Scene, container: GameObjects.Container) {
     if (!scene.textures.exists('glass')) {
       const style = {
+        fillStyle: {
+          color: 0x0000FF,
+          alpha: 1
+        },
         lineStyle: {
           width: SIZE,
           color: 0xffffff,
@@ -99,12 +112,39 @@ export default class Glass extends Physics.Arcade.Sprite {
         {x: BOTTOM_RIGHT_X, y: BOTTOM_Y},
         {x: TOP_RIGHT_X, y: TOP_Y}
       ];
+      
       scene.add
         .graphics(style)
         .strokePoints(points, false, false)
         .generateTexture('glass', 47, 43)
         .destroy();
+
+      scene.add
+        .graphics(style)
+        .fillPoints(points)
+        .generateTexture('filler', 47, 43)
+        .destroy()
     }
-    return new Glass(scene, 0, 0, 'glass');
+
+    const filler = scene.add.sprite(0, 0, 'filler').setOrigin(0, 0);
+
+    const g = scene.make.graphics({});
+    Glass.makeMask(g, 0xFFFFFF, container.x, 0, filler.width, filler.height);
+    
+    const mask = g.createGeometryMask();
+    mask.invertAlpha = true;
+    filler.setMask(mask);
+    
+    const glass = new Glass(scene, 0, 0, 'glass', filler, g);
+    container.add(glass).add(filler);
+
+    return glass;
+  }
+
+  static makeMask(g: GameObjects.Graphics, color: integer, x: integer, y: integer, width: integer, height: integer) {
+    g
+    .fillStyle(color)
+    .beginPath()
+    .fillRect(x, y, width, height);
   }
 }

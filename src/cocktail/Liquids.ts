@@ -5,7 +5,7 @@ export default class Liquids extends Physics.Arcade.Group {
   constructor(scene: Scene, private readonly container: GameObjects.Container) {
     super(scene.physics.world, scene);
     this.createMultiple({
-      frameQuantity: 10, //100
+      frameQuantity: 100, //100
       key: 'liquid',
       active: false,
       visible: false,
