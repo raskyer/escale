@@ -1,5 +1,4 @@
 import { Scene, Types } from "phaser";
-import Bar from "./Bar";
 import Settings from "utils/Settings";
 import UI from "./UI";
 
@@ -13,26 +12,27 @@ export default class DrawableFactory {
   }
 
   createBackground() {
-    this.scene.add
+    return this.scene.add
       .image(-220, 0, 'background')
       .setOrigin(0, 0)
       .setDisplaySize(this.settings.width + 250, this.settings.height + 50);
   }
 
   createFloor() {
-    this.scene.add.rectangle(
-      this.settings.entrance,
-      this.settings.floor,
-      this.settings.width,
-      this.settings.height,
-      this.settings.floorColor,
-      1
-    )
-    .setOrigin(0,0);
+    return this.scene.add
+      .rectangle(
+        this.settings.entrance,
+        this.settings.floor,
+        this.settings.width,
+        this.settings.height,
+        this.settings.floorColor,
+        1
+      )
+      .setOrigin(0,0);
   }
 
   createBar() {
-    const sprite = this.scene.add
+    return this.scene.add
       .rectangle(
         this.settings.middle,
         this.settings.floor, 
@@ -41,8 +41,6 @@ export default class DrawableFactory {
         this.settings.barColor
       )
       .setOrigin(0,1);
-
-    return new Bar(sprite);
   }
 
   createUI() {
@@ -60,5 +58,26 @@ export default class DrawableFactory {
       .setOrigin(1,0);
     
     return new UI(time, cash);
+  }
+
+  static createMsg(scene: Scene, x: integer, y: integer, text: string) {
+    const style: Types.GameObjects.Text.TextStyle = {
+      color: '#00FF00',
+      fontFamily: "Arial Black",
+      fontSize: '20px',
+      fontStyle: 'bold',
+      backgroundColor: '#FFFFFF',
+      padding: {
+        x: 50,
+        y: 10
+      },
+      stroke: '#000',
+      strokeThickness: 2,
+    };
+
+    return scene.add
+      .text(x, y, text, style)
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true });
   }
 }

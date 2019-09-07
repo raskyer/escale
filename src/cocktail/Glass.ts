@@ -16,7 +16,7 @@ export default class Glass extends Physics.Arcade.Sprite {
   private g: GameObjects.Graphics;
   private level = 1;
 
-  constructor(scene: Scene, x: integer, y: integer, texture: string) {
+  private constructor(scene: Scene, x: integer, y: integer, texture: string) {
     super(scene, x, y, texture);
 
     this.setOrigin(0,0);
@@ -104,7 +104,7 @@ export default class Glass extends Physics.Arcade.Sprite {
     this.g.y = dragY;
   }
 
-  static build(scene: Scene, container: GameObjects.Container) {
+  static build(scene: Scene, container: GameObjects.Container): Glass {
     if (!scene.textures.exists('glass')) {
       const style = {
         fillStyle: {

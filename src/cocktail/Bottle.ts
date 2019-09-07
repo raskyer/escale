@@ -18,7 +18,7 @@ export default class Bottle extends Physics.Arcade.Sprite {
     this.on('drag', this.onDrag, this);
   }
 
-  private onDrag(pointer: Phaser.Input.Pointer, dragX: integer, dragY: integer) {
+  private onDrag(_: Phaser.Input.Pointer, dragX: integer, dragY: integer) {
     this.x = dragX;
     this.y = dragY;
   }

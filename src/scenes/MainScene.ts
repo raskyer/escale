@@ -1,15 +1,12 @@
 import * as Phaser from 'phaser';
 import { addSeconds, format } from 'date-fns';
 
-import Bar from 'drawable/Bar';
 import Character from 'character/Character';
 import Key from 'character/Key';
 import Animation from 'character/Animation';
 import Order from 'order/Order';
-import Orderable from 'order/Orderable';
 import CharacterFactory from 'character/CharacterFactory';
 import ClientQueue from 'ClientQueue';
-import OrderFactory from 'order/OrderFactory';
 import Settings from 'utils/Settings';
 import DrawableFactory from 'drawable/DrawableFactory';
 import UI from 'drawable/UI';
@@ -27,9 +24,9 @@ export default class MainScene extends Phaser.Scene {
   private settings: Settings;
   private ui: UI;
   private barmaid: Character;
-  private bar: Bar;
+  private bar: Phaser.GameObjects.Rectangle;
   private clients: Character[] = [];
-  private orders: Order<Orderable>[] = [];
+  private orders: Order[] = [];
 
   private currentDate = new Date('1995-12-17T00:00:00');
 
@@ -104,7 +101,6 @@ export default class MainScene extends Phaser.Scene {
     });
     //container.setVisible(false);
     /* COCKTAIL */
-
 
     this.ui = dFactory.createUI();
     this.barmaid = cFactory.createBarmaid();
@@ -186,8 +182,8 @@ export default class MainScene extends Phaser.Scene {
   }
 
   private async onReady(client: Character) {
-    await client.moveTo(this.bar.getX(), this.bar.getY());
-    const order = OrderFactory.createOrderFor(this, client);
+    await client.moveTo(this.bar.x, this.bar.y);
+    const order = Order.build(this, client);
 
     order.addOnProgressListener(async _ => {
       //this.game.scene.start('cocktail');
