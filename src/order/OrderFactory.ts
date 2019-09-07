@@ -1,6 +1,6 @@
-import { Scene, Types } from "phaser";
-import Character from "character/Character";
-import Order from "./Order";
+import { Scene, Types } from 'phaser';
+import Character from 'character/Character';
+import Order from './Order';
 
 export default class OrderFactory {
   static createOrderFor(scene: Scene, client: Character) {

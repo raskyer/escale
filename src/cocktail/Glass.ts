@@ -1,4 +1,5 @@
-import { Physics, Scene, GameObjects, Game } from "phaser";
+import { Physics, Scene, GameObjects, Display } from 'phaser';
+import Liquid from './Liquid';
 
 const SIZE = 2;
 
@@ -11,10 +12,11 @@ const TOP_Y = 0;
 const BOTTOM_Y = 40;
 
 export default class Glass extends Physics.Arcade.Sprite {
-  private readonly g: GameObjects.Graphics;
+  private colors: Map<number, integer> = new Map();
+  private g: GameObjects.Graphics;
   private level = 1;
 
-  constructor(scene: Scene, x: integer, y: integer, texture: string, private readonly filler: GameObjects.Sprite, private readonly masked: GameObjects.Graphics) {
+  constructor(scene: Scene, x: integer, y: integer, texture: string) {
     super(scene, x, y, texture);
 
     this.setOrigin(0,0);
@@ -24,74 +26,83 @@ export default class Glass extends Physics.Arcade.Sprite {
 
     (this.body as Physics.Arcade.Body).allowGravity = false;
     (this.body as Physics.Arcade.Body).collideWorldBounds = true;
-    this.g = scene.add.graphics({
-      fillStyle: {
-        color: 0x0000FF,
-        alpha: 1
-      }
-    });
-
+    this.g = this.scene.add.graphics();
     this.on('drag', this.onDrag, this);
   }
 
-  fill() {
-    if (this.level > this.height) {
+  fill(liquid: Liquid) {
+    if (this.level > this.height - SIZE) {
       return;
     }
-    if (this.level > 10) {
-    }
+    this.addColor(liquid.fillColor);
+    this.updateGraphics(this.mixColor());
     this.level++;
-    this.updateG();
   }
 
-  private updateG() {
-    this.masked.y = this.y - this.level;
-    /*this.g.clear();
+  private addColor(color: number) {
+    if (!this.colors.has(color)) {
+      this.colors.set(color, 1);
+    } else {
+      this.colors.set(color, this.colors.get(color) + 1);
+    }
+  }
 
-    const topY = (this.y + BOTTOM_Y) - this.level - SIZE;
-    const bottomY = this.y + BOTTOM_Y;
+  private mixColor(): number {
+    const mixColor = {r: 0, g: 0, b: 0};
+    let total = 0;
 
-    let diff = ((this.y + this.height) - topY) / 2;
+    for (const [color, frequency] of this.colors.entries()) {
+      const rgb = Display.Color.IntegerToRGB(color);
+      mixColor.r += (rgb.r * frequency);
+      mixColor.g += (rgb.g * frequency);
+      mixColor.b += (rgb.b * frequency);
+      total += frequency;
+    }
+
+    mixColor.r /= total;
+    mixColor.g /= total;
+    mixColor.b /= total;
+
+    return Display.Color.GetColor(mixColor.r, mixColor.g, mixColor.b);
+  }
+
+  private updateGraphics(color: number) {
+    if (!this.g.body) {
+      this.parentContainer.add(this.g);
+      this.scene.physics.add.existing(this.g);
+      const body = <Physics.Arcade.Body> this.g.body;
+      body.allowGravity = false;
+      body.collideWorldBounds = true;
+      body.width = this.width;
+      body.height = this.height;
+    }
+
+    this.g.clear();
+    this.g.defaultFillColor = color;
+    const topY = BOTTOM_Y - this.level - SIZE;
+
+    let diff = (this.height - topY) / 2;
     diff = diff + SIZE;
 
-    let topLX = (this.x + BOTTOM_LEFT_X) - (this.level - diff);
-    let topRX = (this.x + BOTTOM_RIGHT_X) + (this.level - diff);
+    let topLX = BOTTOM_LEFT_X - (this.level - diff);
+    let topRX = BOTTOM_RIGHT_X + (this.level - diff);
 
     const points = [
       {x: topLX, y: topY},
-      {x: this.x + BOTTOM_LEFT_X, y: bottomY},
-      {x: this.x + BOTTOM_RIGHT_X, y: bottomY},
+      {x: BOTTOM_LEFT_X, y: BOTTOM_Y},
+      {x: BOTTOM_RIGHT_X, y: BOTTOM_Y},
       {x: topRX, y: topY}
     ];
 
     this.g.fillPoints(points);
-    this.parentContainer.add(this.g);*/
   }
 
-  private onDrag(pointer: Phaser.Input.Pointer, dragX: integer, dragY: integer) {
+  private onDrag(_: Phaser.Input.Pointer, dragX: integer, dragY: integer) {
     this.x = dragX;
     this.y = dragY;
-    this.filler.x = dragX;
-    this.filler.y = dragY;
-    this.masked.x = dragX;
-    this.masked.y = dragY - this.level;
+    this.g.x = dragX;
+    this.g.y = dragY;
   }
-
-  /*
-  const prevX = this.x;
-  const prevY = this.y;
-
-  this.x = dragX;
-  this.y = dragY;
-
-  const zoneBounds = zone.getBounds();
-  const bottleBounds = this.getBounds();
-
-  if (!Phaser.Geom.Rectangle.ContainsRect(zoneBounds, bottleBounds)) {
-    this.x = prevX;
-    this.y = prevY;
-  }
-  */
 
   static build(scene: Scene, container: GameObjects.Container) {
     if (!scene.textures.exists('glass')) {
@@ -118,33 +129,11 @@ export default class Glass extends Physics.Arcade.Sprite {
         .strokePoints(points, false, false)
         .generateTexture('glass', 47, 43)
         .destroy();
-
-      scene.add
-        .graphics(style)
-        .fillPoints(points)
-        .generateTexture('filler', 47, 43)
-        .destroy()
     }
 
-    const filler = scene.add.sprite(0, 0, 'filler').setOrigin(0, 0);
-
-    const g = scene.make.graphics({});
-    Glass.makeMask(g, 0xFFFFFF, container.x, 0, filler.width, filler.height);
-    
-    const mask = g.createGeometryMask();
-    mask.invertAlpha = true;
-    filler.setMask(mask);
-    
-    const glass = new Glass(scene, 0, 0, 'glass', filler, g);
-    container.add(glass).add(filler);
+    const glass = new Glass(scene, 0, 0, 'glass');
+    container.add(glass);
 
     return glass;
-  }
-
-  static makeMask(g: GameObjects.Graphics, color: integer, x: integer, y: integer, width: integer, height: integer) {
-    g
-    .fillStyle(color)
-    .beginPath()
-    .fillRect(x, y, width, height);
   }
 }

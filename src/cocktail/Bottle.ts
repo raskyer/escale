@@ -1,6 +1,8 @@
 import { Physics, Scene } from "phaser";
 
 export default class Bottle extends Physics.Arcade.Sprite {
+  readonly color: number = 0x00FF00;
+
   constructor(scene: Scene, x: integer, y: integer, texture: string) {
     super(scene, x, y, texture);
     

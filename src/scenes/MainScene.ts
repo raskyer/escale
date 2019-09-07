@@ -78,7 +78,7 @@ export default class MainScene extends Phaser.Scene {
     const collider = this.physics.add.overlap(liquids, glass, function (glass: Glass, liquid: Liquid) {
       const lBody = <Phaser.Physics.Arcade.Body> liquid.body;
       //lBody.stop();
-      glass.fill();
+      glass.fill(liquid);
       lBody.checkCollision.none = true;
       liquid.setActive(false);
       liquid.setVisible(false);
@@ -89,14 +89,14 @@ export default class MainScene extends Phaser.Scene {
       paused: true,
       loop: true,
       callback: () => {
-        liquids.flow(bottle.x, bottle.y);
+        liquids.flow(bottle);
       }
     });
 
     this.input.on('wheel', (pointer: Phaser.Input.Pointer, dx: integer, dy: integer, dz: integer, event: any) => {
       bottle.angle -= dz / 10;
       if (bottle.angle > 80 || bottle.angle < -80) {
-        liquids.flow(bottle.x, bottle.y);
+        liquids.flow(bottle);
         repeat.paused = false;
       } else {
         repeat.paused = true;

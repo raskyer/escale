@@ -1,5 +1,6 @@
-import { Physics, Scene, GameObjects } from "phaser";
+import { Physics, Scene, GameObjects } from 'phaser';
 import Liquid from './Liquid';
+import Bottle from './Bottle';
 
 export default class Liquids extends Physics.Arcade.Group {
   constructor(scene: Scene, private readonly container: GameObjects.Container) {
@@ -17,12 +18,12 @@ export default class Liquids extends Physics.Arcade.Group {
     });
   }
 
-  flow(x: integer, y: integer) {
+  flow(bottle: Bottle) {
     let liquid = this.getFirstDead();
 
     if (liquid) {
       this.container.add(liquid);
-      liquid.flow(x, y);
+      liquid.flow(bottle);
     }
   }
 }
