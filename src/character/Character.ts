@@ -22,7 +22,7 @@ export default class Character {
 
   private onLeaveListeners: Consumer<Character>[] = [];
 
-  constructor(private readonly sprite: GameObjects.Sprite, private readonly key: string, private readonly id: string) {}
+  constructor(private readonly sprite: GameObjects.Sprite, private readonly key: string) {}
 
   turn(direction: Direction) {
     if (this.direction === direction) {

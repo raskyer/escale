@@ -1,6 +1,6 @@
 enum Animation {
-    Idle = 'idle',
-    Run = 'run'
+  Idle = 'idle',
+  Run = 'run'
 }
 
 export default Animation;

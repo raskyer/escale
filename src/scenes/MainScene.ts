@@ -16,10 +16,10 @@ import Glass from 'cocktail/Glass';
 import Liquid from 'cocktail/Liquid';
 
 export default class MainScene extends Phaser.Scene {
-  private static BARMAID_IDLE = Key.Barmaid + '.' + Animation.Idle
-  private static BARMAID_RUN = Key.Barmaid + '.' + Animation.Run;
-  private static CLIENT1_IDLE = Key.Client1 + '.' + Animation.Idle;
-  private static CLIENT1_RUN = Key.Client1 + '.' + Animation.Run;
+  private static readonly BARMAID_IDLE = Key.Barmaid + '.' + Animation.Idle
+  private static readonly BARMAID_RUN = Key.Barmaid + '.' + Animation.Run;
+  private static readonly CLIENT1_IDLE = Key.Client1 + '.' + Animation.Idle;
+  private static readonly CLIENT1_RUN = Key.Client1 + '.' + Animation.Run;
 
   private settings: Settings;
   private ui: UI;
@@ -124,7 +124,7 @@ export default class MainScene extends Phaser.Scene {
         if (queue.isFull()) {
           return;
         }
-        const client = cFactory.createClient(this.clients.length.toString());
+        const client = cFactory.createClient();
         this.clients.push(client);
         queue.addClient(client);
       }
@@ -164,21 +164,15 @@ export default class MainScene extends Phaser.Scene {
   }
 
   private createClient(factory: CharacterFactory, queue: ClientQueue) {
-    const client = factory.createClient('1');
+    const client = factory.createClient();
     this.clients.push(client);
     queue.addClient(client);
   }
 
   private buildClientEvery(delay: integer, factory: CharacterFactory) {
     this.time.delayedCall(delay, () => {
-      this.buildClient(factory);
       this.buildClientEvery(delay, factory);
     }, [], this);
-  }
-
-  private buildClient(factory: CharacterFactory) {
-    const client = factory.createClient('');
-    this.clients.push(client);
   }
 
   private async onReady(client: Character) {

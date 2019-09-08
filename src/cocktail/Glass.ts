@@ -1,5 +1,6 @@
 import { Physics, Scene, GameObjects, Display } from 'phaser';
 import Liquid from './Liquid';
+import Consumable from './Consumable';
 
 const SIZE = 2;
 
@@ -12,8 +13,9 @@ const TOP_Y = 0;
 const BOTTOM_Y = 40;
 
 export default class Glass extends Physics.Arcade.Sprite {
-  private colors: Map<number, integer> = new Map();
-  private g: GameObjects.Graphics;
+  private readonly colors: Map<number, integer> = new Map();
+  private readonly consumables: Map<Consumable, integer> = new Map();
+  private readonly g: GameObjects.Graphics;
   private level = 1;
 
   private constructor(scene: Scene, x: integer, y: integer, texture: string) {
@@ -34,9 +36,15 @@ export default class Glass extends Physics.Arcade.Sprite {
     if (this.level > this.height - SIZE) {
       return;
     }
+    this.addConsumable(liquid.consumable);
     this.addColor(liquid.fillColor);
     this.updateGraphics(this.mixColor());
     this.level++;
+  }
+
+  private addConsumable(consumable: Consumable) {
+    const former = this.consumables.get(consumable);
+    this.consumables.set(consumable, (former ? former : 0) + 1);
   }
 
   private addColor(color: number) {

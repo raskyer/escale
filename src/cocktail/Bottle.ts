@@ -1,6 +1,8 @@
 import { Physics, Scene } from "phaser";
+import Consumable from "./Consumable";
 
 export default class Bottle extends Physics.Arcade.Sprite {
+  readonly consumable: Consumable = Consumable.Rhum;
   readonly color: number = 0x00FF00;
 
   constructor(scene: Scene, x: integer, y: integer, texture: string) {

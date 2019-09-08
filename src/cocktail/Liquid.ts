@@ -1,7 +1,10 @@
 import { Physics, Scene, GameObjects } from 'phaser';
 import Bottle from './Bottle';
+import Consumable from './Consumable';
 
 export default class Liquid extends GameObjects.Arc {
+  consumable: Consumable;
+
   constructor(scene: Scene, x: integer, y: integer) {
     super(scene, x, y, 3);
   }
@@ -12,6 +15,7 @@ export default class Liquid extends GameObjects.Arc {
     body.reset(bottle.x, bottle.y);
 
     this.fillColor = bottle.color;
+    this.consumable = bottle.consumable;
     this.setActive(true);
     this.setVisible(true);
   }
