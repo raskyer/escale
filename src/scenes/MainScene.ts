@@ -26,7 +26,7 @@ export default class MainScene extends Phaser.Scene {
   private barmaid: Character;
   private bar: Phaser.GameObjects.Rectangle;
   private clients: Character[] = [];
-  private orders: Order[] = [];
+  private currentOrder: Order | undefined;
 
   private currentDate = new Date('1995-12-17T00:00:00');
 
@@ -64,6 +64,21 @@ export default class MainScene extends Phaser.Scene {
     const zone = this.add.rectangle(0, 0, this.settings.middle, this.settings.height, 0xFF0000).setOrigin(0, 0);
     container.add(zone);
 
+    const dropZone = this.add
+      .zone(0, this.settings.floor, this.settings.middle, this.settings.floorHeight)
+      .setRectangleDropZone(this.settings.middle, this.settings.floorHeight);
+    container.add(dropZone);
+
+    const graphics = this.add.graphics();
+    graphics.lineStyle(2, 0xffff00);
+    graphics.strokeRect(
+      dropZone.x,
+      dropZone.y,
+      dropZone.input.hitArea.width,
+      dropZone.input.hitArea.height
+    );
+    container.add(graphics);
+
     const bottle = new Bottle(this, 0, 0, 'bottle');
     container.add(bottle);
 
@@ -82,7 +97,7 @@ export default class MainScene extends Phaser.Scene {
     }, null, this);
 
     const repeat = this.time.addEvent({
-      delay: 50,
+      delay: 200,
       paused: true,
       loop: true,
       callback: () => {
@@ -90,10 +105,26 @@ export default class MainScene extends Phaser.Scene {
       }
     });
 
+    this.input.on('drop', (pointer: Phaser.Input.Pointer, glass: Glass, dropZone: Phaser.GameObjects.Zone) => {
+      console.log(this.currentOrder);
+      if (this.currentOrder === undefined) {
+        // no order yet
+        return;
+      }
+      if (glass instanceof Glass) {
+        console.log('GLASS');
+        glass.input.enabled = false;
+        // check if recipe of current glass === currentOrder
+        const satisfaction = this.currentOrder.check(glass.getConsumable());
+        console.log(satisfaction);
+        this.destroyClient(this.currentOrder.getOwner(), satisfaction);
+      }
+    });
+
     this.input.on('wheel', (pointer: Phaser.Input.Pointer, dx: integer, dy: integer, dz: integer, event: any) => {
       bottle.angle -= dz / 10;
       if (bottle.angle > 80 || bottle.angle < -80) {
-        liquids.flow(bottle);
+        //liquids.flow(bottle);
         repeat.paused = false;
       } else {
         repeat.paused = true;
@@ -117,18 +148,16 @@ export default class MainScene extends Phaser.Scene {
       }
     });
 
-    this.time.addEvent({
+    /*this.time.addEvent({
       delay: 3000,
       loop: true,
       callback: () => {
         if (queue.isFull()) {
           return;
         }
-        const client = cFactory.createClient();
-        this.clients.push(client);
-        queue.addClient(client);
+        this.createClient(cFactory, queue);
       }
-    })
+    });*/
   }
 
   update(time: number, delta: number) {
@@ -169,6 +198,16 @@ export default class MainScene extends Phaser.Scene {
     queue.addClient(client);
   }
 
+  private destroyClient(client: Character, satisfaction: integer) {
+    client.satisfaction(satisfaction);
+    this.currentOrder.cancel();
+    client.leave(this.settings.entrance, this.settings.floor)
+    .then(() => {
+      this.clients = this.clients.filter(c => c !== client);
+      client.destroy();
+    });
+  }
+
   private buildClientEvery(delay: integer, factory: CharacterFactory) {
     this.time.delayedCall(delay, () => {
       this.buildClientEvery(delay, factory);
@@ -181,21 +220,24 @@ export default class MainScene extends Phaser.Scene {
 
     order.addOnProgressListener(async _ => {
       //this.game.scene.start('cocktail');
-      client.stopWait();
+      console.log('CLICK');
+      this.currentOrder = order;
+
+      /*client.stopWait();
       this.ui.addCash(5);
       client.satisfaction(100);
       order.cancel();
       await client.leave(this.settings.entrance, this.settings.floor);
       client.destroy();
-      this.clients = this.clients.filter(c => c !== client);
+      this.clients = this.clients.filter(c => c !== client);*/
     });
 
-    const tolerance = Phaser.Math.RND.integerInRange(3000, 6000);
+    /*const tolerance = Phaser.Math.RND.integerInRange(3000, 6000);
     await client.startWait(tolerance);
     order.cancel();
     await client.leave(this.settings.entrance, this.settings.floor);
     client.destroy();
-    this.clients = this.clients.filter(c => c !== client);
+    this.clients = this.clients.filter(c => c !== client);*/
   }
 
   private async onAwait(client: Character, prev: Character) {

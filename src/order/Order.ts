@@ -3,13 +3,18 @@ import { Consumer } from 'utils/Interfaces';
 import Character from 'character/Character';
 import Cocktail from 'cocktail/Cocktail';
 import DrawableFactory from 'drawable/DrawableFactory';
+import Consumable from 'cocktail/Consumable';
 
 export default class Order {
   private inProgress: boolean = false;
   private onProgressListeners: Consumer<Order>[] = [];
   private onCancelListeners: Consumer<Order>[] = [];
 
-  private constructor(private readonly sprite: GameObjects.Text, private readonly cocktail: Cocktail) {
+  private constructor(
+    private readonly sprite: GameObjects.Text,
+    private readonly cocktail: Cocktail,
+    private readonly owner: Character
+  ) {
     this.sprite.addListener('pointerdown', () => {
       this.inProgress = true;
       this.onProgressListeners.forEach(l => l(this));
@@ -30,7 +35,7 @@ export default class Order {
       duration: 500
     });
 
-    const order = new Order(text, cocktail);
+    const order = new Order(text, cocktail, client);
 
     order.addOnCancelListener(_ => {
       scene.add.tween({
@@ -55,8 +60,16 @@ export default class Order {
     this.onCancelListeners.push(listener);
   }
 
+  check(recipe: Map<Consumable, integer>): integer {
+    return 100;
+  }
+
   isInProgress() {
     return this.inProgress;
+  }
+
+  getOwner() {
+    return this.owner;
   }
 
   cancel() {

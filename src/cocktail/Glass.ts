@@ -42,6 +42,10 @@ export default class Glass extends Physics.Arcade.Sprite {
     this.level++;
   }
 
+  getConsumable() {
+    return this.consumables;
+  }
+
   private addConsumable(consumable: Consumable) {
     const former = this.consumables.get(consumable);
     this.consumables.set(consumable, (former ? former : 0) + 1);
