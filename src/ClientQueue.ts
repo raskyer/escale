@@ -2,9 +2,12 @@ import Character from "character/Character";
 import { Consumer, BiConsumer } from "utils/Interfaces";
 
 export default class ClientQueue {
-  private queue: Character[] = [];
+  private readonly queue: Character[] = [];
 
-  constructor(private readonly onReady: Consumer<Character>, private readonly onAwait: BiConsumer<Character>) {}
+  constructor(
+    private readonly onReady: Consumer<Character>,
+    private readonly onAwait: BiConsumer<Character>
+  ) {}
 
   addClient(client: Character) {
     if (this.queue.length === 0) {

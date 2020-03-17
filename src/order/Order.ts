@@ -7,8 +7,8 @@ import Consumable from 'cocktail/Consumable';
 
 export default class Order {
   private inProgress: boolean = false;
-  private onProgressListeners: Consumer<Order>[] = [];
-  private onCancelListeners: Consumer<Order>[] = [];
+  private readonly onProgressListeners: Consumer<Order>[] = [];
+  private readonly onCancelListeners: Consumer<Order>[] = [];
 
   private constructor(
     private readonly sprite: GameObjects.Text,
@@ -24,9 +24,9 @@ export default class Order {
   static build(scene: Scene, client: Character): Order {
     const x = client.getX();
     const y = client.getY() - client.getHeight();
-    const cocktail = Cocktail.build();
+    const cocktail = Cocktail.buildRandom();
 
-    const text = DrawableFactory.createMsg(scene, x, y, '');
+    const text = DrawableFactory.createMsg(scene, x, y, cocktail.getType());
 
     scene.add.tween({
       targets: text,

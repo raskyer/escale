@@ -85,8 +85,7 @@ export default class Glass extends Physics.Arcade.Sprite {
       const body = <Physics.Arcade.Body> this.g.body;
       body.allowGravity = false;
       body.collideWorldBounds = true;
-      body.width = this.width;
-      body.height = this.height;
+      body.setSize(this.width, this.height);
     }
 
     this.g.clear();

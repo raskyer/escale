@@ -61,13 +61,16 @@ export default class MainScene extends Phaser.Scene {
     const container = this.add.container(this.settings.middle + this.settings.barWidth, 0);
     container.setSize(this.settings.middle, this.settings.height);
     
-    const zone = this.add.rectangle(0, 0, this.settings.middle, this.settings.height, 0xFF0000).setOrigin(0, 0);
-    container.add(zone);
+    const cocktailRec = this.add.rectangle(0, 0, this.settings.middle, this.settings.height, 0xFF0000)
+      .setOrigin(0, 0);
+    container.add(cocktailRec);
 
     const dropZone = this.add
-      .zone(0, this.settings.floor, this.settings.middle, this.settings.floorHeight)
-      .setRectangleDropZone(this.settings.middle, this.settings.floorHeight);
+      .zone(0, this.settings.height - 200, this.settings.middle, 200)
+      .setRectangleDropZone(this.settings.middle, 200);
     container.add(dropZone);
+
+    console.log(dropZone.input.hitArea.height);
 
     const graphics = this.add.graphics();
     graphics.lineStyle(2, 0xffff00);
@@ -106,14 +109,14 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.input.on('drop', (pointer: Phaser.Input.Pointer, glass: Glass, dropZone: Phaser.GameObjects.Zone) => {
-      console.log(this.currentOrder);
+      console.log('drop', this.currentOrder);
       if (this.currentOrder === undefined) {
         // no order yet
         return;
       }
       if (glass instanceof Glass) {
         console.log('GLASS');
-        glass.input.enabled = false;
+        //glass.input.enabled = false;
         // check if recipe of current glass === currentOrder
         const satisfaction = this.currentOrder.check(glass.getConsumable());
         console.log(satisfaction);
@@ -148,7 +151,7 @@ export default class MainScene extends Phaser.Scene {
       }
     });
 
-    /*this.time.addEvent({
+    this.time.addEvent({
       delay: 3000,
       loop: true,
       callback: () => {
@@ -157,7 +160,7 @@ export default class MainScene extends Phaser.Scene {
         }
         this.createClient(cFactory, queue);
       }
-    });*/
+    });
   }
 
   update(time: number, delta: number) {
