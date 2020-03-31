@@ -10,7 +10,7 @@ export default class Liquid extends GameObjects.Arc {
   }
 
   flow(bottle: Bottle) {
-    const body = <Physics.Arcade.Body> this.body;
+    const body = this.body as Physics.Arcade.Body;
     body.checkCollision.none = false;
     body.reset(bottle.x, bottle.y);
 
@@ -21,7 +21,7 @@ export default class Liquid extends GameObjects.Arc {
   }
 
   preUpdate() {
-    if (this.y + this.height > this.parentContainer.height) {
+    if (this.y + this.height > this.scene.physics.world.bounds.height) {
       this.setActive(false);
       this.setVisible(false);
     }

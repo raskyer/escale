@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import MainScene from './scenes/MainScene';
+import CocktailScene from './scenes/CocktailScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -21,7 +22,7 @@ const config: Phaser.Types.Core.GameConfig = {
       gravity: { y: window.innerHeight / 2 }
     }
   },
-  scene: [MainScene]
+  scene: [MainScene, CocktailScene]
 };
 
 const game = new Phaser.Game(config);

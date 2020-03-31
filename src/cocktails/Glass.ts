@@ -21,7 +21,7 @@ export default class Glass extends Physics.Arcade.Sprite {
   private constructor(scene: Scene, x: integer, y: integer, texture: string) {
     super(scene, x, y, texture);
 
-    this.setOrigin(0,0);
+    this.setOrigin(0, 0);
     this.setInteractive();
     scene.input.setDraggable(this);
     scene.physics.add.existing(this);
@@ -30,6 +30,41 @@ export default class Glass extends Physics.Arcade.Sprite {
     (this.body as Physics.Arcade.Body).collideWorldBounds = true;
     this.g = this.scene.add.graphics();
     this.on('drag', this.onDrag, this);
+  }
+
+  static build(scene: Scene, x: integer, y: integer): Glass {
+    if (!scene.textures.exists('glass')) {
+      const style = {
+        fillStyle: {
+          color: 0x0000ff,
+          alpha: 1
+        },
+        lineStyle: {
+          width: SIZE,
+          color: 0xffffff,
+          alpha: 1
+        }
+      };
+      const points = [
+        { x: TOP_LEFT_X, y: TOP_Y },
+        { x: BOTTOM_LEFT_X, y: BOTTOM_Y },
+        { x: BOTTOM_RIGHT_X, y: BOTTOM_Y },
+        { x: TOP_RIGHT_X, y: TOP_Y }
+      ];
+
+      scene.add
+        .graphics(style)
+        .strokePoints(points, false, false)
+        .generateTexture('glass', 47, 43)
+        .destroy();
+    }
+
+    const glass = new Glass(scene, x, y, 'glass');
+    scene.add.existing(glass);
+
+    glass.body.immovable = true;
+
+    return glass;
   }
 
   fill(liquid: Liquid) {
@@ -60,14 +95,14 @@ export default class Glass extends Physics.Arcade.Sprite {
   }
 
   private mixColor(): number {
-    const mixColor = {r: 0, g: 0, b: 0};
+    const mixColor = { r: 0, g: 0, b: 0 };
     let total = 0;
 
     for (const [color, frequency] of this.colors.entries()) {
       const rgb = Display.Color.IntegerToRGB(color);
-      mixColor.r += (rgb.r * frequency);
-      mixColor.g += (rgb.g * frequency);
-      mixColor.b += (rgb.b * frequency);
+      mixColor.r += rgb.r * frequency;
+      mixColor.g += rgb.g * frequency;
+      mixColor.b += rgb.b * frequency;
       total += frequency;
     }
 
@@ -82,7 +117,7 @@ export default class Glass extends Physics.Arcade.Sprite {
     if (!this.g.body) {
       this.parentContainer.add(this.g);
       this.scene.physics.add.existing(this.g);
-      const body = <Physics.Arcade.Body> this.g.body;
+      const body = <Physics.Arcade.Body>this.g.body;
       body.allowGravity = false;
       body.collideWorldBounds = true;
       body.setSize(this.width, this.height);
@@ -99,10 +134,10 @@ export default class Glass extends Physics.Arcade.Sprite {
     let topRX = BOTTOM_RIGHT_X + (this.level - diff);
 
     const points = [
-      {x: topLX, y: topY},
-      {x: BOTTOM_LEFT_X, y: BOTTOM_Y},
-      {x: BOTTOM_RIGHT_X, y: BOTTOM_Y},
-      {x: topRX, y: topY}
+      { x: topLX, y: topY },
+      { x: BOTTOM_LEFT_X, y: BOTTOM_Y },
+      { x: BOTTOM_RIGHT_X, y: BOTTOM_Y },
+      { x: topRX, y: topY }
     ];
 
     this.g.fillPoints(points);
@@ -113,38 +148,5 @@ export default class Glass extends Physics.Arcade.Sprite {
     this.y = dragY;
     this.g.x = dragX;
     this.g.y = dragY;
-  }
-
-  static build(scene: Scene, container: GameObjects.Container): Glass {
-    if (!scene.textures.exists('glass')) {
-      const style = {
-        fillStyle: {
-          color: 0x0000FF,
-          alpha: 1
-        },
-        lineStyle: {
-          width: SIZE,
-          color: 0xffffff,
-          alpha: 1
-        }
-      };
-      const points = [
-        {x: TOP_LEFT_X, y: TOP_Y},
-        {x: BOTTOM_LEFT_X, y: BOTTOM_Y},
-        {x: BOTTOM_RIGHT_X, y: BOTTOM_Y},
-        {x: TOP_RIGHT_X, y: TOP_Y}
-      ];
-      
-      scene.add
-        .graphics(style)
-        .strokePoints(points, false, false)
-        .generateTexture('glass', 47, 43)
-        .destroy();
-    }
-
-    const glass = new Glass(scene, 0, 0, 'glass');
-    container.add(glass);
-
-    return glass;
   }
 }

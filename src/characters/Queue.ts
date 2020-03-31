@@ -1,13 +1,11 @@
-import Character from "character/Character";
-import { Consumer, BiConsumer } from "utils/Interfaces";
+import Character from './Character';
+import { Consumer, BiConsumer } from 'utils/Interfaces';
 
-export default class ClientQueue {
+export default class Queue {
   private readonly queue: Character[] = [];
+  private readonly leaving: Character[] = [];
 
-  constructor(
-    private readonly onReady: Consumer<Character>,
-    private readonly onAwait: BiConsumer<Character>
-  ) {}
+  constructor(private readonly onReady: Consumer<Character>, private readonly onAwait: BiConsumer<Character>) {}
 
   addClient(client: Character) {
     if (this.queue.length === 0) {

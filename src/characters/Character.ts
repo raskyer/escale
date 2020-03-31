@@ -1,11 +1,13 @@
-import { GameObjects } from 'phaser';
+import { Scene, GameObjects } from 'phaser';
 import State from './State';
 import Direction from './Direction';
-import Animation from './Animation';
+import Settings from 'utils/Settings';
 import { Consumer } from 'utils/Interfaces';
 
-export default class Character {
-  private state: State = State.Idle;
+export default class Character extends GameObjects.Sprite {
+  static readonly BAIRMAID = 'barmaid';
+  static readonly CLIENT_1 = 'client1';
+
   private direction: Direction = Direction.Right;
   private speed: integer = 3;
 
@@ -20,21 +22,41 @@ export default class Character {
 
   private leader: Character;
 
-  private onLeaveListeners: Consumer<Character>[] = [];
+  private readonly onLeaveListeners: Consumer<Character>[] = [];
 
-  constructor(private readonly sprite: GameObjects.Sprite, private readonly key: string) {}
+  private constructor(scene: Scene, x: integer, y: integer, private readonly key: string) {
+    super(scene, x, y, key);
+  }
+
+  static build(scene: Scene, key: string, x: integer, y: integer) {
+    const character = new Character(scene, x, y, key).setOrigin(0, 1).setScale(3, 3);
+    character.state = State.Idle;
+    scene.add.existing(character);
+    return character;
+  }
+
+  static buildBarmaid(scene: Scene, settings: Settings): Character {
+    const barmaid = Character.build(scene, Character.BAIRMAID, settings.middle, settings.floor);
+    barmaid.setX(barmaid.x + barmaid.displayWidth);
+    barmaid.turn(Direction.Left);
+    return barmaid;
+  }
+
+  static buildClient(scene: Scene, settings: Settings): Character {
+    return Character.build(scene, Character.CLIENT_1, 0, settings.floor);
+  }
 
   turn(direction: Direction) {
     if (this.direction === direction) {
       return;
     } else if (direction === Direction.Left) {
       this.direction = direction;
-      this.sprite.setScale(-Math.abs(this.sprite.scaleX), this.sprite.scaleY);
-      this.sprite.setOrigin(1, 1);
+      this.setScale(-Math.abs(this.scaleX), this.scaleY);
+      this.setOrigin(1, 1);
     } else if (direction === Direction.Right) {
-      this.direction = direction;      
-      this.sprite.setScale(Math.abs(this.sprite.scaleX), this.sprite.scaleY);
-      this.sprite.setOrigin(0, 1);
+      this.direction = direction;
+      this.setScale(Math.abs(this.scaleX), this.scaleY);
+      this.setOrigin(0, 1);
     }
   }
 
@@ -78,28 +100,8 @@ export default class Character {
 
   satisfaction(level: integer) {
     if (level > 90) {
-      this.sprite.setTint(0x00FF00);
+      this.setTint(0x00ff00);
     }
-  }
-
-  getX() {
-    return this.sprite.x;
-  }
-
-  getY() {
-    return this.sprite.y;
-  }
-
-  getWidth() {
-    return this.sprite.displayWidth;
-  }
-
-  getHeight() {
-    return this.sprite.displayHeight;
-  }
-
-  getState() {
-    return this.state;
   }
 
   getDirection() {
@@ -115,39 +117,35 @@ export default class Character {
     return this.moveTo(x, y);
   }
 
-  destroy() {
-    this.sprite.destroy();
-  }
-
   tick(delta: number) {
     if (this.wait) {
       this.elapsed += delta;
       if (this.elapsed > this.tolerance) {
-        this.sprite.setTint(0xFF0000);
+        this.setTint(0xff0000);
         this.onAnnoyed(this);
         this.stopWait();
       }
     }
 
     switch (this.state) {
-      case State.Idle:
+      case State.Idle.toString():
         return this.tickIdle();
-      case State.Move:
+      case State.Move.toString():
         return this.tickMove();
-      case State.Follow:
+      case State.Follow.toString():
         return this.tickFollow();
     }
   }
 
   private tickIdle() {
-    this.anim(Animation.Idle);
+    this.animate(State.Idle);
   }
 
   private tickMove() {
-    this.anim(Animation.Run);
+    this.animate(State.Move);
     this.step();
 
-    if (Phaser.Math.Distance.Between(this.dstX, this.dstY, this.sprite.x, this.sprite.y) < 10) {
+    if (Phaser.Math.Distance.Between(this.dstX, this.dstY, this.x, this.y) < 10) {
       this.state = State.Idle;
       this.onArrive && this.onArrive(this);
     }
@@ -155,33 +153,33 @@ export default class Character {
 
   private tickFollow() {
     const dir = this.leader.getDirection();
-    const offset = dir === Direction.Right ? this.leader.getWidth() * -1 : this.leader.getWidth();
-    this.dstX = this.leader.getX() + offset;
-    this.dstY = this.leader.getY();
+    const offset = dir === Direction.Right ? this.leader.displayWidth * -1 : this.leader.displayWidth;
+    this.dstX = this.leader.x + offset;
+    this.dstY = this.leader.y;
 
-    if (this.dstX !== this.sprite.x || this.dstY !== this.sprite.y) {
-      this.anim(Animation.Run);
+    if (this.dstX !== this.x || this.dstY !== this.y) {
+      this.animate(State.Move);
       this.step();
     } else {
-      this.anim(Animation.Idle);
+      this.animate(State.Idle);
       this.onArrive && this.onArrive(this);
     }
   }
 
-  private anim(anim: Animation) {
-    const fullKey = this.key + '.' + anim;
-    if (this.sprite.anims.getCurrentKey() !== fullKey) {
-      this.sprite.play(fullKey);
+  private animate(state: State) {
+    const fullKey = this.key + '.' + state;
+    if (this.anims.getCurrentKey() !== fullKey) {
+      this.anims.play(fullKey);
     }
   }
 
   private step() {
-    if (this.sprite.x < this.dstX) {
+    if (this.x < this.dstX) {
       this.turn(Direction.Right);
-      this.sprite.setX(this.sprite.x + this.speed);
-    } else if (this.sprite.x > this.dstX) {
+      this.setX(this.x + this.speed);
+    } else if (this.x > this.dstX) {
       this.turn(Direction.Left);
-      this.sprite.setX(this.sprite.x - this.speed);
+      this.setX(this.x - this.speed);
     }
   }
 }

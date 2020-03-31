@@ -1,9 +1,11 @@
 import { GameObjects, Scene } from 'phaser';
+
 import { Consumer } from 'utils/Interfaces';
-import Character from 'character/Character';
-import Cocktail from 'cocktail/Cocktail';
-import DrawableFactory from 'drawable/DrawableFactory';
-import Consumable from 'cocktail/Consumable';
+
+import Character from 'characters/Character';
+import Cocktail from 'cocktails/Cocktail';
+import Consumable from 'cocktails/Consumable';
+import Text from 'drawables/Text';
 
 export default class Order {
   private inProgress: boolean = false;
@@ -22,11 +24,10 @@ export default class Order {
   }
 
   static build(scene: Scene, client: Character): Order {
-    const x = client.getX();
-    const y = client.getY() - client.getHeight();
+    const x = client.x;
+    const y = client.y - client.displayHeight;
     const cocktail = Cocktail.buildRandom();
-
-    const text = DrawableFactory.createMsg(scene, x, y, cocktail.getType());
+    const text = Text.build(scene, x, y, cocktail.getType());
 
     scene.add.tween({
       targets: text,
@@ -40,7 +41,7 @@ export default class Order {
     order.addOnCancelListener(_ => {
       scene.add.tween({
         targets: text,
-        alpha: { from: 1, to: 0},
+        alpha: { from: 1, to: 0 },
         ease: 'Linear',
         duration: 200,
         onComplete: () => {
